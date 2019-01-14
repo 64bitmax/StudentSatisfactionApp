@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Student Satisfaction App</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="login">Login</string>
+    <string name="name">Name</string>
+    <string name="register">Register</string>
+    <string name="register_link">Not registered? Register now!</string>
+    <string name="password">Password</string>
+    <string name="student_satisfaction">Student Satisfaction</string>
+    <string name="account_information">Account Information</string>
+    <string name="log_out">Log Out</string>
+    <string name="welcomeName">[NAME]</string>
+    <string name="infoName">Name:</string>
+    <string name="nameString">Name:</string>
+    <string name="universityInfo">UNIVERSITY</string>
+    <string name="emailInfo">Email:</string>
+    <string name="nameInfoPage">Name:</string>
+    <string name="universityInfoPage">University:</string>
+    <string name="back">Back</string>
+    <string name="tweetsTextSatisfaction">Tweets</string>
+    <string name="tweetCustomListItem">Tweet</string>
+    <string name="sentimentListItem">Sentiment</string>
+    <string name="view_graphs">View Graphs</string>
+    <string name="back_satisfaction">Back</string>
+</resources>
