@@ -8,14 +8,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
 
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.oxfordbrookes.max.studentsatisfactionapp.R;
-import com.oxfordbrookes.max.studentsatisfactionapp.utils.DBClient;
-
-import org.bson.Document;
-
-import static com.mongodb.client.model.Filters.eq;
 
 public class DashboardActivity extends Activity {
 

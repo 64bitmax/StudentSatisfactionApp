@@ -10,12 +10,11 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.oxfordbrookes.max.studentsatisfactionapp.R;
-import com.oxfordbrookes.max.studentsatisfactionapp.utils.DBClient;
+import com.oxfordbrookes.max.studentsatisfactionapp.database.DBClient;
 import com.oxfordbrookes.max.studentsatisfactionapp.utils.PasswordEncryption;
 
 import org.bson.Document;
@@ -28,7 +27,8 @@ import java.security.spec.InvalidKeySpecException;
 import static com.mongodb.client.model.Filters.eq;
 
 public class LoginActivity extends Activity {
-    static final boolean DEBUG_MODE = true;
+    static final boolean DEBUG_MODE = false;
+    AlertDialog.Builder alertDialogBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +45,15 @@ public class LoginActivity extends Activity {
         final EditText etEmail = findViewById(R.id.emailEditText);
         final EditText etPassword = findViewById(R.id.passwordEditText);
         final Button btLogin = findViewById(R.id.loginButton);
+
+        alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("You have entered incorrect credentials.");
+        alertDialogBuilder.setPositiveButton("Okay.", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface arg0, int arg1) {
+                arg0.dismiss();
+            }
+        });
 
         DBClient client = null;
         try {
@@ -65,34 +74,59 @@ public class LoginActivity extends Activity {
     public void login(DBClient client, String email, String password) {
         if(!DEBUG_MODE) {
             MongoDatabase db = client.getClient().getDatabase("user-info");
-            MongoCollection<Document> collection = db.getCollection("accounts");
-            Document doc = collection.find(eq("email", email)).first();
-            Binary dbHash = (Binary) doc.get("hash");
-            Binary dbSalt = (Binary) doc.get("salt");
-            String nameText = (String) doc.get("name");
-            String uniText = (String) doc.get("university");
 
-            PasswordEncryption encryption = new PasswordEncryption();
+            if(checkForDb(client)) {
+                MongoCollection<Document> collection = db.getCollection("accounts");
+                if(checkForCollection(db)) {
+                    Document doc = collection.find(eq("email", email)).first();
+                    if(doc != null) {
+                        Binary dbHash = (Binary) doc.get("hash");
+                        Binary dbSalt = (Binary) doc.get("salt");
+                        String nameText = (String) doc.get("name");
+                        String uniText = (String) doc.get("university");
 
-            try {
-                if(encryption.authenticate(password, dbHash.getData(), dbSalt.getData())) {
-                    openDashboard(nameText, email, uniText);
-                } else {
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                    alertDialogBuilder.setMessage("You have entered incorrect credentials.");
-                    alertDialogBuilder.setPositiveButton("Okay.", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface arg0, int arg1) {
-                            LoginActivity.this.finish();
+                        PasswordEncryption encryption = new PasswordEncryption();
+
+                        try {
+                            if(encryption.authenticate(password, dbHash.getData(), dbSalt.getData())) {
+                                openDashboard(nameText, email, uniText);
+                            } else {
+                                alertDialogBuilder.show();
+                            }
+                        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                            e.printStackTrace();
                         }
-                    });
+                    } else {
+                        alertDialogBuilder.show();
+                    }
+                } else {
+                    alertDialogBuilder.show();
                 }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                e.printStackTrace();
+            }
+            else {
+                alertDialogBuilder.show();
             }
         } else {
-            openDashboard("Debugger", "debug@debugging.com", "University of Debug");
+            openDashboard("Debugger", "University of Debug", "debug@debugging.com");
         }
+    }
+
+    public boolean checkForDb (DBClient client) {
+        for(String dbName : client.getClient().listDatabaseNames()) {
+            if(dbName.equals("user-info")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkForCollection (MongoDatabase db) {
+        for(String collectionName : db.listCollectionNames()) {
+            if(collectionName.equals("accounts")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void openRegistration(View view) {

@@ -1,4 +1,4 @@
-package com.oxfordbrookes.max.studentsatisfactionapp.utils;
+package com.oxfordbrookes.max.studentsatisfactionapp.adapters;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -12,6 +12,7 @@ import android.widget.Filterable;
 import android.widget.TextView;
 
 import com.oxfordbrookes.max.studentsatisfactionapp.R;
+import com.oxfordbrookes.max.studentsatisfactionapp.utils.TweetSentiment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +79,8 @@ public class TweetSentimentAdapter extends BaseAdapter implements Filterable {
         @Override
         protected FilterResults performFiltering(CharSequence charSequence) {
             FilterResults results = new FilterResults();
+            charSequence = charSequence.toString().toLowerCase();
+
             if(charSequence == null || charSequence.length() == 0)
             {
                 results.values = originalTweets;
@@ -89,7 +92,7 @@ public class TweetSentimentAdapter extends BaseAdapter implements Filterable {
 
                 for(TweetSentiment tweetSentiment : originalTweets)
                 {
-                    if(tweetSentiment.getTweet().contains(charSequence))
+                    if(tweetSentiment.getTweet().toLowerCase().contains(charSequence))
                     {
                         filteredData.add(tweetSentiment);
                     }

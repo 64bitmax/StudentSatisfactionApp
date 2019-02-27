@@ -23,4 +23,8 @@
     <string name="sentimentListItem">Sentiment</string>
     <string name="view_graphs">View Graphs</string>
     <string name="back_satisfaction">Back</string>
+    <string name="filterStatistics">Filter:</string>
+    <string name="graph_title">[Graph Title]</string>
+    <string name="graph_description">[Graph Description]</string>
+    <string name="backGraphs">Back</string>
 </resources>

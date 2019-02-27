@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
@@ -18,17 +19,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.oxfordbrookes.max.studentsatisfactionapp.R;
-import com.oxfordbrookes.max.studentsatisfactionapp.utils.DBClient;
+import com.oxfordbrookes.max.studentsatisfactionapp.database.DBClient;
 import com.oxfordbrookes.max.studentsatisfactionapp.utils.TweetSentiment;
-import com.oxfordbrookes.max.studentsatisfactionapp.utils.TweetSentimentAdapter;
+import com.oxfordbrookes.max.studentsatisfactionapp.adapters.TweetSentimentAdapter;
 
 import org.bson.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class StudentSatisfactionActivity extends Activity {
@@ -39,7 +39,7 @@ public class StudentSatisfactionActivity extends Activity {
     private SearchView searchBar;
     private TweetSentimentAdapter adapter;
     private Spinner nssQuestions;
-    private FindIterable<Document> tweetDocs;
+    private HashMap<String, FindIterable<Document>> tweetDocs;
 
     @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
     @Override
@@ -63,18 +63,20 @@ public class StudentSatisfactionActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        tweetDocs = getTweets(client);
-        adapter = loadTweets();
 
         /** Configure all components **/
         configureSearchBar();
         configureQuestions();
         configureListeners(email, name, university);
+
+        adapter = loadTweets(nssQuestions.getItemAtPosition(0).toString());
     }
 
     private void configureQuestions() {
+        tweetDocs = client.getPredictedTweets();
+
         List<String> nssQuestionList = new ArrayList<>();
-        nssQuestionList.add("Quality of teaching");
+        nssQuestionList.add("Overall teaching");
         nssQuestionList.add("Learning opportunities");
         nssQuestionList.add("Assessment and feedback");
         nssQuestionList.add("Academic support");
@@ -83,15 +85,29 @@ public class StudentSatisfactionActivity extends Activity {
         nssQuestionList.add("Learning community");
         nssQuestionList.add("Student voice");
         nssQuestionList.add("Overall satisfaction");
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_items, nssQuestionList);
-        adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-        nssQuestions.setAdapter(adapter);
+        ArrayAdapter<String> arrAdapter = new ArrayAdapter<>(this, R.layout.spinner_items, nssQuestionList);
+        arrAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        nssQuestions.setAdapter(arrAdapter);
+        nssQuestions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                adapter = loadTweets(nssQuestions.getSelectedItem().toString());
+                tweetsList.setAdapter(adapter);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
     }
 
-    TweetSentimentAdapter loadTweets() {
+    TweetSentimentAdapter loadTweets(String selectedCategory) {
         List<TweetSentiment> tweetSentiments = new ArrayList<>();
+        FindIterable<Document> category = tweetDocs.get(selectedCategory);
 
-        for(Document doc: tweetDocs) {
+        assert category != null;
+        for(Document doc: category) {
             String tweet = (String) doc.get("tweet");
             int sentiment = (int) doc.get("sentiment");
             tweetSentiments.add(new TweetSentiment(tweet, sentiment));
@@ -152,12 +168,6 @@ public class StudentSatisfactionActivity extends Activity {
                 return false;
             }
         });
-    }
-
-    FindIterable<Document> getTweets(DBClient client) {
-        MongoDatabase db = client.getClient().getDatabase("predictions");
-        MongoCollection<Document> collection = db.getCollection("tweet_sentiments_bayes");
-        return collection.find();
     }
 
     public void statisticsGraphs(String email, String name, String university) {
