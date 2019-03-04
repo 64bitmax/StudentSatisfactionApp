@@ -81,41 +81,58 @@ public class SatisfactionStatisticsActivity extends Activity {
         final String name = getIntent().getStringExtra("name");
         final String email = getIntent().getStringExtra("email");
         final String university = getIntent().getStringExtra("university");
+        final String year = getIntent().getStringExtra("year");
 
         charts = new HashMap<>();
-        tweetDocs = client.getPredictedTweets();
         backButton = findViewById(R.id.buttonBackStudentSatisfaction);
         filterSpinner = findViewById(R.id.spinnerNssCategoryGraphs);
         typeGraphSpinner = findViewById(R.id.spinnerTypeGraph);
         viewSwitcher = findViewById(R.id.viewSwitcher);
 
-        configureQuestionsSpinner();
-        configureGraphTypeSpinner();
-        createListeners(email, name, university);
+        if(year != null) {
+            tweetDocs = client.getPredictedTweets(year);
+        } else if (university.equals("Oxford Brookes University")) {
+            tweetDocs = client.getPredictedTweets("predictions");
+        } else {
+            tweetDocs = client.getPredictedTweets(university + "predictions");
+        }
 
-        final View pieChartLayoutView = findViewById(R.id.pieChartLayout);
-        pieChartLayoutView.post(new Runnable() {
-            @Override
-            public void run() {
-                setupGraphs(pieChartLayoutView.getHeight(), pieChartLayoutView.getWidth());
-            }
-        });
+        if(tweetDocs != null) {
+            configureQuestionsSpinner();
+            configureGraphTypeSpinner();
 
-        final View barChartLayoutView = findViewById(R.id.barChartLayout);
-        barChartLayoutView.post(new Runnable() {
-            @Override
-            public void run() {
-                initBarChart();
-            }
-        });
+            final View pieChartLayoutView = findViewById(R.id.pieChartLayout);
+            pieChartLayoutView.post(new Runnable() {
+                @Override
+                public void run() {
+                    setupGraphs(pieChartLayoutView.getHeight(), pieChartLayoutView.getWidth());
+                }
+            });
+
+            final View barChartLayoutView = findViewById(R.id.barChartLayout);
+            barChartLayoutView.post(new Runnable() {
+                @Override
+                public void run() {
+                    initBarChart();
+                }
+            });
+        } else {
+            List<String> noDataList = new ArrayList<>();
+            noDataList.add("No data exists for " + university);
+            ArrayAdapter<String> arrAdapter = new ArrayAdapter<>(this, R.layout.spinner_items, noDataList);
+            arrAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+            filterSpinner.setAdapter(arrAdapter);
+        }
+
+        createListeners(email, name, university, year);
     }
 
-    private void createListeners(final String email, final String name, final String university) {
+    private void createListeners(final String email, final String name, final String university, final String year) {
         /** Add listeners to buttons to change graph **/
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                studentSatisfaction(email, name, university);
+                studentSatisfaction(email, name, university, year);
             }
         });
     }
@@ -285,9 +302,6 @@ public class SatisfactionStatisticsActivity extends Activity {
         filterSpinner.setAdapter(arrAdapter);
         filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @SuppressLint("SetTextI18n")
-
-
-
             @Override
             public void onItemSelected(AdapterView<?> parentAdapter, View view, int position, long id) {
                 String category = (String) filterSpinner.getSelectedItem();
@@ -361,8 +375,13 @@ public class SatisfactionStatisticsActivity extends Activity {
         });
     }
 
-    void studentSatisfaction(String email, String name, String university) {
-        Intent intent = new Intent(getApplicationContext(), StudentSatisfactionActivity.class);
+    void studentSatisfaction(String email, String name, String university, String year) {
+        Intent intent;
+        if(year == null) {
+            intent = new Intent(getApplicationContext(), StudentSatisfactionActivity.class);
+        } else {
+            intent = new Intent(getApplicationContext(), NSSComparisonsActivity.class);
+        }
         Bundle b = new Bundle();
         b.putString("email", email);
         b.putString("name", name);

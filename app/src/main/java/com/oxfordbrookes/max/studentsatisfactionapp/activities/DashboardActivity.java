@@ -20,6 +20,7 @@ public class DashboardActivity extends Activity {
 
         View vAccountInfo = findViewById(R.id.viewAccountInfo);
         View vStudentSatisfaction = findViewById(R.id.viewStudentSatisfaction);
+        View vNSSComparisons = findViewById(R.id.viewNSSComparisons);
         View vLogOut = findViewById(R.id.viewLogOut);
         TextView tvWelcomeName = findViewById(R.id.welcomeTextView);
         final String email = getIntent().getStringExtra("email");
@@ -45,12 +46,29 @@ public class DashboardActivity extends Activity {
             }
         });
 
+        vNSSComparisons.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nssComparisons(name, email, university);
+            }
+        });
+
         vLogOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 logOut(v);
             }
         });
+    }
+
+    public void nssComparisons(String name, String email, String university) {
+        Intent intent = new Intent(getApplicationContext(), NSSComparisonsActivity.class);
+        Bundle b = new Bundle();
+        b.putString("email", email);
+        b.putString("name", name);
+        b.putString("university", university);
+        intent.putExtras(b);
+        startActivity(intent);
     }
 
     public void accountInfo(String name, String email, String university) {

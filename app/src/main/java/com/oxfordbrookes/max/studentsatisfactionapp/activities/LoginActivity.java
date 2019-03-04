@@ -134,7 +134,7 @@ public class LoginActivity extends Activity {
         startActivity(intent);
     }
 
-    public void openDashboard(String name, String university, String email) {
+    public void openDashboard(String name, String email, String university) {
         Intent intent = new Intent(getApplicationContext(), DashboardActivity.class);
         Bundle b = new Bundle();
         b.putString("email", email);

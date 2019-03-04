@@ -7,7 +7,7 @@
     <string name="register">Register</string>
     <string name="register_link">Not registered? Register now!</string>
     <string name="password">Password</string>
-    <string name="student_satisfaction">Student Satisfaction</string>
+    <string name="student_satisfaction">Current Student Satisfaction</string>
     <string name="account_information">Account Information</string>
     <string name="log_out">Log Out</string>
     <string name="welcomeName">[NAME]</string>
@@ -27,4 +27,5 @@
     <string name="graph_title">[Graph Title]</string>
     <string name="graph_description">[Graph Description]</string>
     <string name="backGraphs">Back</string>
+    <string name="percentage">[PERCENTAGE]</string>
 </resources>

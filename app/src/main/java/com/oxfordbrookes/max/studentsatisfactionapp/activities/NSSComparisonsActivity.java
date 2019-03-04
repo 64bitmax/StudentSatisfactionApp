@@ -18,11 +18,13 @@ import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.PieChart;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoIterable;
 import com.oxfordbrookes.max.studentsatisfactionapp.R;
+import com.oxfordbrookes.max.studentsatisfactionapp.adapters.TweetSentimentAdapter;
 import com.oxfordbrookes.max.studentsatisfactionapp.database.DBClient;
 import com.oxfordbrookes.max.studentsatisfactionapp.utils.TweetSentiment;
-import com.oxfordbrookes.max.studentsatisfactionapp.adapters.TweetSentimentAdapter;
 
 import org.bson.Document;
 
@@ -31,14 +33,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class StudentSatisfactionActivity extends Activity {
+@SuppressLint("Registered")
+public class NSSComparisonsActivity extends Activity {
     private DBClient client;
     private ListView tweetsList;
     private Button graphButton;
     private Button backButton;
+    private Button nssComparisonButton;
     private SearchView searchBar;
     private TweetSentimentAdapter adapter;
     private Spinner nssQuestions;
+    private Spinner nssYear;
     private HashMap<String, FindIterable<Document>> tweetDocs;
 
     @SuppressLint({"ClickableViewAccessibility", "ResourceType"})
@@ -46,45 +51,59 @@ public class StudentSatisfactionActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_student_satisfaction);
+        setContentView(R.layout.activity_nss_comparisons);
 
         final String name = getIntent().getStringExtra("name");
         final String email = getIntent().getStringExtra("email");
         final String university = getIntent().getStringExtra("university");
 
         /** Instantiate activity components **/
-        graphButton = findViewById(R.id.buttonGraphs);
-        backButton = findViewById(R.id.buttonSatisfactionBack);
-        searchBar = findViewById(R.id.searchTweets);
-        tweetsList = findViewById(R.id.listViewTweets);
-        nssQuestions = findViewById(R.id.spinnerNssCategory);
+        graphButton = findViewById(R.id.buttonGraphsNSS);
+        backButton = findViewById(R.id.buttonBackNSS);
+        nssComparisonButton = findViewById(R.id.buttonCompareToNSS);
+        searchBar = findViewById(R.id.searchTweetsNSS);
+        tweetsList = findViewById(R.id.listViewTweetsNSS);
+        nssQuestions = findViewById(R.id.spinnerNssCategoryNSS);
+        nssYear = findViewById(R.id.spinnerNssYear);
         try {
             client = new DBClient(getApplicationContext());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        /** Gather tweets **/
+        configureNSSYears();
         if(university.equals("Oxford Brookes University")) {
-            tweetDocs = client.getPredictedTweets("predictions");
+            tweetDocs = client.getPredictedTweets(nssYear.getSelectedItem().toString());
         } else {
-            tweetDocs = client.getPredictedTweets(university + "_predictions");
+            tweetDocs = client.getPredictedTweets(nssYear.getSelectedItem().toString() + "_" + university);
         }
 
-        /** Configure all components **/
         if(tweetDocs != null) {
             configureSearchBar();
             configureQuestions();
             adapter = loadTweets(nssQuestions.getItemAtPosition(0).toString());
         } else {
             List<String> noDataList = new ArrayList<>();
-            noDataList.add("Data does not exist for " + university);
+            noDataList.add("No data exists for " + university);
             ArrayAdapter<String> arrAdapter = new ArrayAdapter<>(this, R.layout.spinner_items, noDataList);
             arrAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
             nssQuestions.setAdapter(arrAdapter);
         }
 
+        /** Configure all components **/
         configureListeners(email, name, university);
+    }
+
+    private void configureNSSYears() {
+        MongoIterable<String> dbNames = client.getNSSYears();
+        ArrayList<String> nssYearList = new ArrayList<>();
+        for(String s : dbNames) {
+            if(s.contains("_tweets_predictions")) nssYearList.add(s);
+        }
+
+        ArrayAdapter<String> arrAdapter = new ArrayAdapter<>(this, R.layout.spinner_items, nssYearList);
+        arrAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        nssYear.setAdapter(arrAdapter);
     }
 
     private void configureQuestions() {
@@ -109,9 +128,7 @@ public class StudentSatisfactionActivity extends Activity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
+            public void onNothingSelected(AdapterView<?> parent) { }
         });
     }
 
@@ -147,6 +164,13 @@ public class StudentSatisfactionActivity extends Activity {
             }
         });
 
+        nssComparisonButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nssComparisons(email, name, university);
+            }
+        });
+
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -155,6 +179,17 @@ public class StudentSatisfactionActivity extends Activity {
         });
 
         tweetsList.setAdapter(adapter);
+    }
+
+    public void nssComparisons(String email, String name, String university) {
+        Intent intent = new Intent(getApplicationContext(), NSSActivity.class);
+        Bundle b = new Bundle();
+        b.putString("email", email);
+        b.putString("name", name);
+        b.putString("university", university);
+        b.putString("year", nssYear.getSelectedItem().toString());
+        intent.putExtras(b);
+        startActivity(intent);
     }
 
     void configureSearchBar() {
@@ -189,6 +224,7 @@ public class StudentSatisfactionActivity extends Activity {
         b.putString("email", email);
         b.putString("name", name);
         b.putString("university", university);
+        b.putString("year", nssYear.getSelectedItem().toString());
         intent.putExtras(b);
         startActivity(intent);
     }
